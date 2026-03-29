@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from fpdf import FPDF
 from datetime import datetime
-
+import os
 ctk.set_appearance_mode("dark") 
 
 class BillApp(ctk.CTk):
@@ -83,47 +83,32 @@ class BillApp(ctk.CTk):
         self.display_frame.insert("end", f"{f'DISCOUNT ({disc_percent}%)':<25} -${disc_amount:>8.2f}\n")
         self.display_frame.insert("end", f"{'GRAND TOTAL':<25} ${grand_total:>9.2f}")
 
-    def save_pdf(self):
-        disc_percent = self.get_discount()
-        disc_amount = self.subtotal * (disc_percent / 100)
-        grand_total = self.subtotal - disc_amount
+def print_bill(self):
+    disc_percent = self.get_discount()
+    disc_amount = self.subtotal * (disc_percent / 100)
+    grand_total = self.subtotal - disc_amount
 
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(190, 10, txt="OFFICIAL INVOICE", ln=True, align='C')
-        pdf.ln(10)
+    filename = "temp_receipt.pdf"
 
-        # Items Table
-        pdf.set_font("Arial", 'B', 12)
-        pdf.cell(130, 10, "Item Description", border=1)
-        pdf.cell(60, 10, "Price", border=1, ln=True)
+    pdf = FPDF(unit='mm', format=(80, 200))
+    pdf.add_page()
 
-        pdf.set_font("Arial", size=12)
-        for item, price in self.items:
-            pdf.cell(130, 10, item, border=1)
-            pdf.cell(60, 10, f"${price:.2f}", border=1, ln=True)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 8, "MY SHOP", ln=True, align='C')
 
-        # Totals Section
-        pdf.ln(5)
-        pdf.cell(130, 10, "Subtotal:", align='R')
-        pdf.cell(60, 10, f"${self.subtotal:.2f}", ln=True, align='R')
-        
-        pdf.cell(130, 10, f"Discount ({disc_percent}%):", align='R')
-        pdf.cell(60, 10, f"-${disc_amount:.2f}", ln=True, align='R')
-        
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(130, 15, "GRAND TOTAL:", align='R')
-        pdf.cell(60, 15, f"${grand_total:.2f}", ln=True, align='R')
+    pdf.set_font("Arial", size=9)
+    for item, price in self.items:
+        pdf.cell(0, 6, f"{item} - {price:.2f}", ln=True)
 
-        filename = f"bill_{datetime.now().strftime('%H%M%S')}.pdf"
-        pdf.output(filename)
-        print(f"Generated: {filename}")
+    pdf.ln(2)
+    pdf.cell(0, 6, f"Total: {grand_total:.2f}", ln=True)
 
-    def clear_bill(self):
-        self.items = []
-        self.subtotal = 0.0
-        self.update_display()
+    pdf.output(filename)
+
+    # ✅ PRINT COMMAND (Windows)
+    os.startfile(filename, "print")
+
+    print("Printing...")
 
 if __name__ == "__main__":
     app = BillApp()
