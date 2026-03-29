@@ -36,7 +36,7 @@ class BillApp(ctk.CTk):
 
         self.print_button = ctk.CTkButton(self.input_frame, text="Print to PDF", 
                                           fg_color="#2ecc71", hover_color="#27ae60",
-                                          command=self.save_pdf)
+                                          command=self.print_bill)
         self.print_button.pack(pady=10)
 
         self.clear_button = ctk.CTkButton(self.input_frame, text="Clear All", fg_color="#e74c3c", 
