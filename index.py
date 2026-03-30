@@ -4,6 +4,13 @@ from datetime import datetime
 import os
 
 ctk.set_appearance_mode("dark") 
+i = 1;
+t = 1;
+data = {
+    1: {"date": "2023-05-01", 1:{"item": "Shirt", "price": 1500, "discount": 10, "total": 1350}},
+}
+
+tempData = {}
 
 class BillApp(ctk.CTk):
     def __init__(self):
@@ -66,6 +73,7 @@ class BillApp(ctk.CTk):
         try:
             name = self.item_name.get()
             price = float(self.item_price.get())
+            tempData[t+1] = {"date": datetime.now().strftime("%Y-%m-%d"), t+1:{"item": name, "price": price, "discount": self.get_discount(), "total": price - (price * (self.get_discount() / 100))}}
 
             if name:
                 self.items.append((name, price))
@@ -134,7 +142,12 @@ class BillApp(ctk.CTk):
         # Print (Windows)
         os.startfile(filename, "print")
 
+        data[i] = tempData
+
         print("Printing...")
+
+        print(data)
+
 
 if __name__ == "__main__":
     app = BillApp()
