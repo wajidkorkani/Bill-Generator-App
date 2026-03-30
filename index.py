@@ -8,7 +8,7 @@ ctk.set_appearance_mode("dark")
 class BillApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("Modern Bill Generator with Discount")
+        self.title("Bill Generator")
         self.geometry("800x550")
 
         self.items = [] 
