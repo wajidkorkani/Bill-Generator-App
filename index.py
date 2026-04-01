@@ -10,7 +10,7 @@ data = {
     1: {"date": "2023-05-01", 1:{"item": "Shirt", "price": 1500, "discount": 10, "total": 1350}},
 }
 
-tempData = {}
+historyData = {}
 
 class BillApp(ctk.CTk):
     def __init__(self):
@@ -73,8 +73,8 @@ class BillApp(ctk.CTk):
         try:
             name = self.item_name.get()
             price = float(self.item_price.get())
-            tempData[t+1] = {"date": datetime.now().strftime("%Y-%m-%d"), t+1:{"item": name, "price": price, "discount": self.get_discount(), "total": price - (price * (self.get_discount() / 100))}}
-
+            historyData[t+1] = {"date": datetime.now().strftime("%Y-%m-%d"), t+1:{"item": name, "price": price, "discount": self.get_discount(), "total": price - (price * (self.get_discount() / 100))}}
+            print(historyData)
             if name:
                 self.items.append((name, price))
                 self.subtotal += price
@@ -139,10 +139,7 @@ class BillApp(ctk.CTk):
 
         pdf.output(filename)
 
-        # Print (Windows)
-        os.startfile(filename, "print")
-
-        data[i] = tempData
+        data[i] = historyData
 
         print("Printing...")
 
