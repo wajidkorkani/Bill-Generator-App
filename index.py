@@ -63,6 +63,16 @@ class BillApp(ctk.CTk):
         )
         self.clear_button.pack(pady=10)
 
+        self.history_button = ctk.CTkButton(
+            self.input_frame,
+            text="Print History",
+            fg_color="#e7bc3c",
+            text_color="black",
+            command=self.print_history
+        )
+        self.history_button.pack(pady=10)
+
+
         # Right Panel
         self.display_frame = ctk.CTkTextbox(self, width=450, font=("Courier New", 14))
         self.display_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
@@ -84,6 +94,9 @@ class BillApp(ctk.CTk):
                 self.item_price.delete(0, 'end')
         except ValueError:
             pass
+    def print_history(self):
+        print(historyData)
+
 
     def get_discount(self):
         try:
