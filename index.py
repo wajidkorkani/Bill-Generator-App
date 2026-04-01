@@ -4,22 +4,20 @@ from datetime import datetime
 import os
 
 ctk.set_appearance_mode("dark") 
-i = 1;
-t = 1;
-data = {
-    1: {"date": "2023-05-01", 1:{"item": "Shirt", "price": 1500, "discount": 10, "total": 1350}},
-}
 
-historyData = {}
+# Global storage for history
+data = {}
+order_counter = 1
 
 class BillApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("Bill Generator")
-        self.geometry("800x550")
+        self.title("Bill Generator (Per-Item Discount)")
+        self.geometry("850x600")
 
-        self.items = [] 
-        self.subtotal = 0.0
+        self.items = []  # Stores (name, price, discount_pct, final_price)
+        self.total_bill = 0.0
+        self.total_discount = 0.0
 
         # --- UI LAYOUT ---
         self.grid_columnconfigure(1, weight=1)
@@ -33,48 +31,40 @@ class BillApp(ctk.CTk):
 
         self.item_price = ctk.CTkEntry(self.input_frame, placeholder_text="Price (PKR)")
         self.item_price.pack(pady=10, padx=20)
+        
+        # Per-Product Discount Input
+        self.label_disc = ctk.CTkLabel(self.input_frame, text="Discount % for this item:")
+        self.label_disc.pack(pady=(10, 0))
+        
+        self.discount_entry = ctk.CTkEntry(self.input_frame)
+        self.discount_entry.pack(pady=5, padx=20)
+        self.discount_entry.insert(0, "0")
 
         self.add_button = ctk.CTkButton(
             self.input_frame, text="Add Item", command=self.add_item
         )
-        self.add_button.pack(pady=10)
-
-        # Discount Input
-        self.discount_entry = ctk.CTkEntry(
-            self.input_frame, placeholder_text="Discount % (e.g. 10)"
-        )
-        self.discount_entry.pack(pady=10, padx=20)
-        self.discount_entry.insert(0, "0")
+        self.add_button.pack(pady=20)
 
         self.print_button = ctk.CTkButton(
-            self.input_frame,
-            text="Print to PDF",
-            fg_color="#2ecc71",
-            hover_color="#27ae60",
-            command=self.print_bill   # ✅ now works
+            self.input_frame, text="Print to PDF",
+            fg_color="#2ecc71", hover_color="#27ae60", command=self.print_bill
         )
         self.print_button.pack(pady=10)
 
-        self.clear_button = ctk.CTkButton(
-            self.input_frame,
-            text="Clear All",
-            fg_color="#e74c3c",
-            command=self.clear_bill
-        )
-        self.clear_button.pack(pady=10)
-
         self.history_button = ctk.CTkButton(
-            self.input_frame,
-            text="Print History",
-            fg_color="#e7bc3c",
-            text_color="black",
-            command=self.print_history
+            self.input_frame, text="Print History Report",
+            fg_color="#3498db", hover_color="#2980b9", command=self.print_history
         )
         self.history_button.pack(pady=10)
 
+        self.clear_button = ctk.CTkButton(
+            self.input_frame, text="Clear All",
+            fg_color="#e74c3c", command=self.clear_bill
+        )
+        self.clear_button.pack(pady=10)
 
         # Right Panel
-        self.display_frame = ctk.CTkTextbox(self, width=450, font=("Courier New", 14))
+        self.display_frame = ctk.CTkTextbox(self, width=500, font=("Courier New", 13))
         self.display_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
 
         self.update_display()
@@ -83,81 +73,125 @@ class BillApp(ctk.CTk):
         try:
             name = self.item_name.get()
             price = float(self.item_price.get())
-            historyData[t+1] = {"date": datetime.now().strftime("%Y-%m-%d"), t+1:{"item": name, "price": price, "discount": self.get_discount(), "total": price - (price * (self.get_discount() / 100))}}
-            print(historyData)
+            disc_pct = float(self.discount_entry.get())
+            
             if name:
-                self.items.append((name, price))
-                self.subtotal += price
+                # Calculate discount for this specific item
+                item_disc_amount = price * (disc_pct / 100)
+                final_price = price - item_disc_amount
+                
+                self.items.append((name, price, disc_pct, final_price))
+                self.total_bill += final_price
+                self.total_discount += item_disc_amount
+                
                 self.update_display()
 
+                # Reset inputs for next item
                 self.item_name.delete(0, 'end')
                 self.item_price.delete(0, 'end')
+                self.discount_entry.delete(0, 'end')
+                self.discount_entry.insert(0, "0")
         except ValueError:
             pass
-    def print_history(self):
-        print(historyData)
-
-
-    def get_discount(self):
-        try:
-            return float(self.discount_entry.get())
-        except ValueError:
-            return 0.0
 
     def update_display(self):
-        disc_percent = self.get_discount()
-        disc_amount = self.subtotal * (disc_percent / 100)
-        grand_total = self.subtotal - disc_amount
-
         self.display_frame.delete("0.0", "end")
+        header = f"{'ITEM':<15} {'PRICE':>10} {'DISC%':>8} {'TOTAL':>10}\n"
+        self.display_frame.insert("0.0", header)
+        self.display_frame.insert("end", "-" * 48 + "\n")
 
-        self.display_frame.insert("0.0", f"{'ITEM':<25} {'PRICE':>10}\n")
-        self.display_frame.insert("end", "-" * 38 + "\n")
+        for name, price, disc, final in self.items:
+            row = f"{name[:14]:<15} {price:>10.2f} {disc:>7.0f}% {final:>10.2f}\n"
+            self.display_frame.insert("end", row)
 
-        for item, price in self.items:
-            self.display_frame.insert("end", f"{item:<25} ${price:>9.2f}\n")
-
-        self.display_frame.insert("end", "\n" + "-" * 38 + "\n")
-        self.display_frame.insert("end", f"{'SUBTOTAL':<25} PKR{self.subtotal:>9.2f}\n")
-        self.display_frame.insert("end", f"{f'DISCOUNT ({disc_percent}%)':<25} -PKR{disc_amount:>8.2f}\n")
-        self.display_frame.insert("end", f"{'GRAND TOTAL':<25} PKR{grand_total:>9.2f}")
+        self.display_frame.insert("end", "\n" + "-" * 48 + "\n")
+        self.display_frame.insert("end", f"{'TOTAL SAVINGS':<33} PKR {self.total_discount:>10.2f}\n")
+        self.display_frame.insert("end", f"{'GRAND TOTAL':<33} PKR {self.total_bill:>10.2f}")
 
     def clear_bill(self):
         self.items = []
-        self.subtotal = 0.0
+        self.total_bill = 0.0
+        self.total_discount = 0.0
         self.update_display()
 
     def print_bill(self):
-        disc_percent = self.get_discount()
-        disc_amount = self.subtotal * (disc_percent / 100)
-        grand_total = self.subtotal - disc_amount
+        global order_counter
+        if not self.items:
+            return
 
-        filename = "temp_receipt.pdf"
+        date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        pdf = FPDF(unit='mm', format=(80, 200))
+        # Save current state to history
+        data[order_counter] = {
+            "date": date_str,
+            "items": list(self.items),
+            "total_discount": self.total_discount,
+            "total_final": self.total_bill
+        }
+
+        # Generate Receipt PDF
+        filename = f"receipt_{order_counter}.pdf"
+        pdf = FPDF(unit='mm', format=(80, 150))
         pdf.add_page()
-
         pdf.set_font("Arial", 'B', 12)
-        pdf.cell(0, 8, "Wajid's Shoop", ln=True, align='C')
+        pdf.cell(0, 8, "Wajid's Shop", ln=True, align='C')
+        
+        pdf.set_font("Arial", size=8)
+        pdf.cell(0, 5, f"Date: {date_str}", ln=True, align='C')
+        pdf.ln(5)
 
-        pdf.set_font("Arial", size=9)
+        pdf.set_font("Courier", size=8)
+        pdf.cell(0, 5, f"{'Item':<15} {'Disc':>5} {'Price':>10}", ln=True)
+        pdf.cell(0, 2, "-"*35, ln=True)
 
-        for item, price in self.items:
-            pdf.cell(0, 6, f"{item} - {price:.2f}", ln=True)
+        for name, price, disc, final in self.items:
+            pdf.cell(0, 5, f"{name[:14]:<15} {disc:>4.0f}% {final:>10.2f}", ln=True)
 
-        pdf.ln(2)
-        pdf.cell(0, 6, f"Subtotal: {self.subtotal:.2f}", ln=True)
-        pdf.cell(0, 6, f"Discount: -{disc_amount:.2f}", ln=True)
-        pdf.cell(0, 6, f"Total: {grand_total:.2f}", ln=True)
+        pdf.ln(5)
+        pdf.set_font("Arial", 'B', 9)
+        pdf.cell(0, 6, f"Total Savings: PKR {self.total_discount:.2f}", ln=True)
+        pdf.cell(0, 7, f"GRAND TOTAL: PKR {self.total_bill:.2f}", ln=True)
 
         pdf.output(filename)
+        
+        print(f"Bill #{order_counter} printed.")
+        order_counter += 1
+        self.clear_bill()
 
-        data[i] = historyData
+    def print_history(self):
+        if not data:
+            print("No history to print!")
+            return
 
-        print("Printing...")
+        filename = "sales_history.pdf"
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(0, 10, "Sales History Report", ln=True, align='C')
+        pdf.ln(10)
 
-        print(data)
+        pdf.set_font("Arial", 'B', 10)
+        pdf.cell(15, 10, "ID", 1)
+        pdf.cell(50, 10, "Date", 1)
+        pdf.cell(40, 10, "Saved", 1)
+        pdf.cell(40, 10, "Final Total", 1, ln=True)
 
+        pdf.set_font("Arial", size=10)
+        total_revenue = 0
+
+        for order_id, info in data.items():
+            pdf.cell(15, 10, str(order_id), 1)
+            pdf.cell(50, 10, info['date'], 1)
+            pdf.cell(40, 10, f"{info['total_discount']:.2f}", 1)
+            pdf.cell(40, 10, f"{info['total_final']:.2f}", 1, ln=True)
+            total_revenue += info['total_final']
+
+        pdf.ln(10)
+        pdf.set_font("Arial", 'B', 12)
+        pdf.cell(0, 10, f"Total Cumulative Revenue: PKR {total_revenue:.2f}", ln=True, align='R')
+
+        pdf.output(filename)
+        print(f"History report generated: {filename}")
 
 if __name__ == "__main__":
     app = BillApp()
