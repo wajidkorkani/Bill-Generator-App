@@ -12,7 +12,7 @@ order_counter = 1
 class BillApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("Bill Generator (Per-Item Discount)")
+        self.title("Bill Generator")
         self.geometry("850x600")
 
         self.items = []  # Stores (name, price, discount_pct, final_price)
