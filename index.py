@@ -32,9 +32,6 @@ class BillApp(ctk.CTk):
         self.item_price = ctk.CTkEntry(self.input_frame, placeholder_text="Price (PKR)")
         self.item_price.pack(pady=10, padx=20)
         
-        # Per-Product Discount Input
-        self.label_disc = ctk.CTkLabel(self.input_frame, text="Discount % for this item:")
-        self.label_disc.pack(pady=(10, 0))
         
         self.discount_entry = ctk.CTkEntry(self.input_frame)
         self.discount_entry.pack(pady=5, padx=20)
