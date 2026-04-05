@@ -1,7 +1,7 @@
+import os
 import customtkinter as ctk
 from fpdf import FPDF
 from datetime import datetime
-import os
 
 ctk.set_appearance_mode("dark") 
 
